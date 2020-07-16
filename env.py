@@ -20,6 +20,7 @@ if __name__ == '__main__':
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 game_over=True
+            print(event)
                 
     pygame.quit()
     quit()
