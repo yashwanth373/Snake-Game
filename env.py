@@ -1,6 +1,8 @@
 import pygame
 import time
 import random
+import numpy as np
+from keras.utils import to_categorical
 
 class Environment:
     def __init__(self,width,height):
@@ -14,6 +16,7 @@ class Environment:
         pygame.display.update()
         self.player=Player()
         self.food=Food(self)
+        self.end=False
 
 class Player:
     def __init__(self):
@@ -27,9 +30,17 @@ class Player:
     def display(self,env):
         for i in range(0,self.score):
             pygame.draw.rect(env.display,(0,0,0),[self.body[i][0],self.body[i][1],10,10])
+        pygame.display.update()
 
-    def move(self):
-        pass
+    def move(self,direction,env):
+        if np.array_equal(direction,[0,1,0]):
+            pass
+        elif np.array_equal(direction,[0,0,1]):
+            pass
+        elif np.array_equal(direction,[1,0,0]):
+            self.body[0][0] = self.body[0][0] + 10
+        if self.body[0][0]>env.width-45:
+            env.end=True
     
 
 
@@ -63,16 +74,23 @@ if __name__ == '__main__':
     food=env.food
     player.display(env)
     pygame.display.update()
-    game_over = False
-    while not game_over:
+    while not env.end:
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
                 game_over=True
-        if random.random()<=0.5:
-            food.new_spawn(env)
-            player.display(env)
-            pygame.display.update()
-        time.sleep(1)
+        direction=to_categorical(random.randint(0,2),num_classes=3)
+        player.move(direction,env)
+        env.display.blit(env.bg,(25,5))
+        pygame.display.update()
+        pygame.draw.rect(env.display,(0,255,0),[food.x_food,food.y_food,10,10])
+        pygame.display.update()
+        player.display(env)
+        time.sleep(0.2)
+    if(env.end):
+        print("game over")
+        print("loc of snake head",player.body[0][0]," ",player.body[0][1])
+
+        
 
                 
     pygame.quit()
