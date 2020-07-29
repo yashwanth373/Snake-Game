@@ -24,23 +24,46 @@ class Player:
         self.y=200
         self.body =[]
         self.body.append([self.x,self.y])
+        self.body.append([self.x-10,self.y])
         self.score=1
         self.crash=False
+        self.dir="right"
 
     def display(self,env):
-        for i in range(0,self.score):
+        for i in range(0,len(self.body)):
             pygame.draw.rect(env.display,(0,0,0),[self.body[i][0],self.body[i][1],10,10])
-        pygame.display.update()
+            pygame.display.update()
+    
+    def update_body(self,head_x,head_y):
+        for i in range(0,len(self.body)-1):
+            self.body[i+1]=self.body[i]
+        self.body[0]=[head_x,head_y]
+        
 
     def move(self,direction,env):
-        if np.array_equal(direction,[0,1,0]):
+        if self.dir=="right":
+            if np.array_equal(direction,[0,1,0]):
+                self.update_body(self.body[0][0],self.body[0][1] + 10)                
+            elif np.array_equal(direction,[0,0,1]):
+                self.update_body(self.body[0][0],self.body[0][1] - 10)
+            elif np.array_equal(direction,[1,0,0]):
+                self.update_body(self.body[0][0] + 10,self.body[0][1])
+        elif self.dir=="left":
             pass
-        elif np.array_equal(direction,[0,0,1]):
+        elif self.dir=="up":
             pass
-        elif np.array_equal(direction,[1,0,0]):
-            self.body[0][0] = self.body[0][0] + 10
+        elif self.dir=="down":
+            pass
+    
         if self.body[0][0]>env.width-45:
             env.end=True
+        
+        
+        
+        
+        
+        
+        
     
 
 
@@ -58,12 +81,17 @@ class Food:
         if [self.x_food,self.y_food] in env.player.body:
             self.new_spawn(env)
         else:
-            env.display.blit(env.bg,(25,5))
-            pygame.display.update()
-            pygame.draw.rect(env.display,(0,255,0),[self.x_food,self.y_food,10,10])
-            pygame.display.update()
+            screen_update(env)
 
-         
+
+def screen_update(env):
+    env.display.blit(env.bg,(25,5))
+    pygame.display.update()
+    pygame.draw.rect(env.display,(0,255,0),[env.food.x_food,env.food.y_food,10,10])
+    pygame.display.update()
+    env.player.display(env)
+
+
 
 
 
@@ -72,27 +100,20 @@ if __name__ == '__main__':
     env = Environment(600,400)
     player=env.player
     food=env.food
+    print(player.body)
     player.display(env)
     pygame.display.update()
     while not env.end:
         for event in pygame.event.get():
             if event.type==pygame.QUIT:
-                game_over=True
+                env.end=True
         direction=to_categorical(random.randint(0,2),num_classes=3)
         player.move(direction,env)
-        env.display.blit(env.bg,(25,5))
-        pygame.display.update()
-        pygame.draw.rect(env.display,(0,255,0),[food.x_food,food.y_food,10,10])
-        pygame.display.update()
-        player.display(env)
+        screen_update(env)
         time.sleep(0.2)
     if(env.end):
         print("game over")
-        print("loc of snake head",player.body[0][0]," ",player.body[0][1])
 
-        
-
-                
     pygame.quit()
     quit()
 
