@@ -25,6 +25,10 @@ class Player:
         self.body =[]
         self.body.append([self.x,self.y])
         self.body.append([self.x-10,self.y])
+        self.body.append([self.x-20,self.y])
+        self.body.append([self.x-30,self.y])
+        self.body.append([self.x-40,self.y])
+        self.body.append([self.x-50,self.y])
         self.score=1
         self.crash=False
         self.dir="right"
@@ -34,26 +38,55 @@ class Player:
             pygame.draw.rect(env.display,(0,0,0),[self.body[i][0],self.body[i][1],10,10])
             pygame.display.update()
     
-    def update_body(self,head_x,head_y):
-        for i in range(0,len(self.body)-1):
-            self.body[i+1]=self.body[i]
-        self.body[0]=[head_x,head_y]
+    def update_body(self,head_x,head_y,env):
+        if [head_x,head_y] in self.body:
+            env.end=True
+        else:
+            self.body.pop()
+            self.body.insert(0,[head_x,head_y])
         
 
     def move(self,direction,env):
         if self.dir=="right":
-            if np.array_equal(direction,[0,1,0]):
-                self.update_body(self.body[0][0],self.body[0][1] + 10)                
-            elif np.array_equal(direction,[0,0,1]):
-                self.update_body(self.body[0][0],self.body[0][1] - 10)
-            elif np.array_equal(direction,[1,0,0]):
-                self.update_body(self.body[0][0] + 10,self.body[0][1])
+            if np.array_equal(direction,[0,1,0]): #right turn
+                self.update_body(self.body[0][0],self.body[0][1] + 10,env)  
+                self.dir="down"              
+            elif np.array_equal(direction,[0,0,1]): #left turn
+                self.update_body(self.body[0][0],self.body[0][1] - 10,env)
+                self.dir="up"
+            elif np.array_equal(direction,[1,0,0]): #gng straight
+                self.update_body(self.body[0][0] + 10,self.body[0][1],env)
+                self.dir="right"
         elif self.dir=="left":
-            pass
+            if np.array_equal(direction,[0,1,0]): #right turn
+                self.update_body(self.body[0][0],self.body[0][1] - 10,env)  
+                self.dir="up"             
+            elif np.array_equal(direction,[0,0,1]): #left turn
+                self.update_body(self.body[0][0],self.body[0][1] + 10,env)
+                self.dir="down"
+            elif np.array_equal(direction,[1,0,0]): #gng straight
+                self.update_body(self.body[0][0] - 10,self.body[0][1],env)
+                self.dir="left"
         elif self.dir=="up":
-            pass
+            if np.array_equal(direction,[0,1,0]): #right turn
+                self.update_body(self.body[0][0] + 10,self.body[0][1],env)  
+                self.dir="right"              
+            elif np.array_equal(direction,[0,0,1]): #left turn
+                self.update_body(self.body[0][0] - 10,self.body[0][1],env)
+                self.dir="left"
+            elif np.array_equal(direction,[1,0,0]): #gng straight
+                self.update_body(self.body[0][0],self.body[0][1]-10,env)
+                self.dir="up"
         elif self.dir=="down":
-            pass
+            if np.array_equal(direction,[0,1,0]): #right turn
+                self.update_body(self.body[0][0] - 10,self.body[0][1],env)  
+                self.dir="left"              
+            elif np.array_equal(direction,[0,0,1]): #left turn
+                self.update_body(self.body[0][0] + 10,self.body[0][1],env)
+                self.dir="right"
+            elif np.array_equal(direction,[1,0,0]): #gng straight
+                self.update_body(self.body[0][0],self.body[0][1] + 10,env)
+                self.dir="down"
     
         if self.body[0][0]>env.width-45:
             env.end=True
@@ -100,7 +133,6 @@ if __name__ == '__main__':
     env = Environment(600,400)
     player=env.player
     food=env.food
-    print(player.body)
     player.display(env)
     pygame.display.update()
     while not env.end:
@@ -113,6 +145,7 @@ if __name__ == '__main__':
         time.sleep(0.2)
     if(env.end):
         print("game over")
+        print("head loc is ",player.body[0])
 
     pygame.quit()
     quit()
