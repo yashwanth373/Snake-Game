@@ -4,6 +4,14 @@ import random
 import numpy as np
 from keras.utils import to_categorical
 
+# Global Paramters
+episodes_count=50
+epsilon=1
+epsilon_decay=0.001
+
+
+
+
 class Environment:
     def __init__(self,width,height):
         self.width=width
@@ -25,10 +33,6 @@ class Player:
         self.body =[]
         self.body.append([self.x,self.y])
         self.body.append([self.x-10,self.y])
-        self.body.append([self.x-20,self.y])
-        self.body.append([self.x-30,self.y])
-        self.body.append([self.x-40,self.y])
-        self.body.append([self.x-50,self.y])
         self.score=1
         self.crash=False
         self.dir="right"
@@ -38,9 +42,14 @@ class Player:
             pygame.draw.rect(env.display,(0,0,0),[self.body[i][0],self.body[i][1],10,10])
             pygame.display.update()
     
-    def update_body(self,head_x,head_y,env):
+    def update_body(self,head_x,head_y,env):      
+        
         if [head_x,head_y] in self.body:
             env.end=True
+        elif head_x==env.food.x_food and head_y==env.food.y_food:
+            self.body.insert(0,[head_x,head_y])
+            self.score += 1
+            env.food.new_spawn(env)
         else:
             self.body.pop()
             self.body.insert(0,[head_x,head_y])
@@ -88,7 +97,7 @@ class Player:
                 self.update_body(self.body[0][0],self.body[0][1] + 10,env)
                 self.dir="down"
     
-        if self.body[0][0]>env.width-45:
+        if self.body[0][0]>env.width-45 or self.body[0][0]<35 or self.body[0][1]>env.height-65 or self.body[0][1]<15:
             env.end=True
         
         
@@ -130,22 +139,38 @@ def screen_update(env):
 
 if __name__ == '__main__':
     pygame.init()
-    env = Environment(600,400)
-    player=env.player
-    food=env.food
-    player.display(env)
-    pygame.display.update()
-    while not env.end:
-        for event in pygame.event.get():
-            if event.type==pygame.QUIT:
-                env.end=True
-        direction=to_categorical(random.randint(0,2),num_classes=3)
-        player.move(direction,env)
-        screen_update(env)
-        time.sleep(0.2)
-    if(env.end):
-        print("game over")
-        print("head loc is ",player.body[0])
+    game_count=0
+    highscore=0
+    break_out=False
+    while game_count<episodes_count:
+        env = Environment(600,400)
+        player=env.player
+        food=env.food
+        player.display(env)
+        pygame.display.update()
+        direction=[]
+        while not env.end:
+            for event in pygame.event.get():
+                if event.type==pygame.QUIT:
+                    env.end=True
+                    break_out=True
+            if random.randint(0,1)<epsilon:
+                #do a random movement
+                direction=to_categorical(random.randint(0,2),num_classes=3)
+            else:
+                #get movement from the NN
+                pass
+            player.move(direction,env)
+            screen_update(env)
+            time.sleep(0.1)
+        if break_out:
+            break
+        epsilon=epsilon-epsilon_decay
+        if player.score-1>highscore:
+            highscore=player.score-1
+        game_count += 1
+        print("game number ",game_count)
+        print("head loc is ",player.body[0], "score is ",player.score-1, " and highscore is ",highscore)
 
     pygame.quit()
     quit()
