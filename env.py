@@ -3,11 +3,15 @@ import time
 import random
 import numpy as np
 from keras.utils import to_categorical
+from DQN import Agent
 
 # Global Paramters
-episodes_count=50
+episodes_count=150
 epsilon=1
-epsilon_decay=0.001
+epsilon_decay=1/75
+batch_size=250
+memory_size=1500
+
 
 
 
@@ -36,6 +40,7 @@ class Player:
         self.score=1
         self.crash=False
         self.dir="right"
+        self.eaten=False
 
     def display(self,env):
         for i in range(0,len(self.body)):
@@ -49,6 +54,7 @@ class Player:
         elif head_x==env.food.x_food and head_y==env.food.y_food:
             self.body.insert(0,[head_x,head_y])
             self.score += 1
+            self.eaten=True
             env.food.new_spawn(env)
         else:
             self.body.pop()
@@ -134,37 +140,61 @@ def screen_update(env):
     env.player.display(env)
 
 
+def initialise(env,agent):
+    init_state1=agent.get_state(env)
+    action = [1,0,0]
+    env.player.move(action,env)
+    init_state2=agent.get_state(env)
+    reward = agent.set_reward(env)
+    agent.remember(init_state1,action,reward,init_state2,env.end)
+    agent.replay(agent.memory,batch_size)
+
+
+
 
 
 
 if __name__ == '__main__':
     pygame.init()
     game_count=0
+    agent=Agent()
     highscore=0
     break_out=False
     while game_count<episodes_count:
+        for event in pygame.event.get():
+            if event.type==pygame.QUIT:
+                pygame.quit()
+                quit()
         env = Environment(600,400)
         player=env.player
         food=env.food
+
+        #Initialising game
+        initialise(env,agent)
+
         player.display(env)
         pygame.display.update()
         direction=[]
         while not env.end:
-            for event in pygame.event.get():
-                if event.type==pygame.QUIT:
-                    env.end=True
-                    break_out=True
+            old_state = agent.get_state(env)
+
             if random.randint(0,1)<epsilon:
                 #do a random movement
                 direction=to_categorical(random.randint(0,2),num_classes=3)
             else:
                 #get movement from the NN
-                pass
+                prediction = agent.NN.predict(old_state.reshape((1,8)))
+                direction = to_categorical(np.argmax(prediction[0]),num_classes=3)
+            
             player.move(direction,env)
+            new_state = agent.get_state(env)
+            reward =agent.set_reward(env)
+            agent.remember(old_state,direction,reward,new_state,env.end)
             screen_update(env)
-            time.sleep(0.1)
-        if break_out:
-            break
+            # for better display
+            # time.sleep(0.1)
+        agent.replay(agent.memory,batch_size)
+
         epsilon=epsilon-epsilon_decay
         if player.score-1>highscore:
             highscore=player.score-1
