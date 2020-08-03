@@ -9,8 +9,7 @@ from DQN import Agent
 episodes_count=150
 epsilon=1
 epsilon_decay=1/75
-batch_size=250
-memory_size=1500
+batch_size=500
 
 
 
@@ -56,6 +55,7 @@ class Player:
             self.score += 1
             self.eaten=True
             env.food.new_spawn(env)
+            self.eaten=False
         else:
             self.body.pop()
             self.body.insert(0,[head_x,head_y])
@@ -128,8 +128,8 @@ class Food:
         self.y_food=random.randrange(15,env.height-65,10)
         if [self.x_food,self.y_food] in env.player.body:
             self.new_spawn(env)
-        else:
-            screen_update(env)
+        # else:
+        #     screen_update(env)
 
 
 def screen_update(env):
@@ -183,13 +183,14 @@ if __name__ == '__main__':
                 direction=to_categorical(random.randint(0,2),num_classes=3)
             else:
                 #get movement from the NN
-                prediction = agent.NN.predict(old_state.reshape((1,8)))
+                prediction = agent.NN.predict(old_state.reshape((1,11)))
                 direction = to_categorical(np.argmax(prediction[0]),num_classes=3)
             
             player.move(direction,env)
             new_state = agent.get_state(env)
             reward =agent.set_reward(env)
             agent.remember(old_state,direction,reward,new_state,env.end)
+            player.eaten=False
             screen_update(env)
             # for better display
             # time.sleep(0.1)

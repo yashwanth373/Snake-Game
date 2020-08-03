@@ -1,46 +1,70 @@
 from keras.models import Sequential
 from keras.layers.core import Dense
 from keras.optimizers import Adam
+from operator import add
 import numpy as np
 import random
+import collections
 
 class Agent:
     def __init__(self):
         self.reward=0
-        self.first_layer= 100
-        self.second_layer=100
-        self.third_layer=100
-        self.fourth_layer=100
-        self.memory=[]
+        self.first_layer= 150
+        self.second_layer=150
+        self.memory_size=2500
+        self.third_layer=150
+        self.memory=collections.deque(maxlen=self.memory_size)
         self.gamma = 0.9
-        self.learning_rate=0.001
+        self.learning_rate=0.0005
         self.NN=self.network()
 
     
     # Sequential Neural Network
     def network(self):
         nn=Sequential()
-        nn.add(Dense(self.first_layer,activation='relu',input_dim=8))
+        nn.add(Dense(self.first_layer,activation='relu',input_dim=11))
         nn.add(Dense(self.second_layer,activation='relu'))
         nn.add(Dense(self.third_layer,activation='relu'))
-        nn.add(Dense(self.fourth_layer,activation='relu'))
         nn.add(Dense(3,activation='softmax'))
         opt=Adam(self.learning_rate)
         nn.compile(loss='mse',optimizer=opt)
         return nn
 
     def get_state(self,env):
+        player=env.player
+        
         state=[
+
+
+
+            (player.dir=="right" and ((list(map(add, player.body[-1], [10, 0])) in player.body) or
+            player.body[-1][0] + 10 >= (env.width - 45))) or (player.dir=="left" and ((list(map(add, player.body[-1], [-10, 0])) in player.body) or
+            player.body[-1][0] - 10 < 35)) or (player.dir=="up" and ((list(map(add, player.body[-1], [0, -10])) in player.body) or
+            player.body[-1][-1] - 10 < 15)) or (player.dir=="down" and ((list(map(add, player.body[-1], [0, 10])) in player.body) or
+            player.body[-1][-1] + 10 >= (env.height-65))),  # danger straight
+
+            (player.dir=="up" and ((list(map(add,player.body[-1],[10, 0])) in player.body) or
+            player.body[ -1][0] + 10 > (env.width-45))) or (player.dir=="down" and ((list(map(add,player.body[-1],[-10,0])) in player.body) or
+            player.body[-1][0] - 10 < 35)) or (player.dir=="left" and ((list(map(add,player.body[-1],[0,-10])) in player.body) or 
+            player.body[-1][-1] - 10 < 15)) or (player.dir=="right" and ((list(map(add,player.body[-1],[0,10])) in player.body) or 
+            player.body[-1][-1] + 10 >= (env.height-65))),  # danger right
+
+             (player.dir=="down" and ((list(map(add,player.body[-1],[10,0])) in player.body) or
+             player.body[-1][0] + 10 > (env.width-45))) or (player.dir=="up" and ((list(map(add, player.body[-1],[-10,0])) in player.body) or
+             player.body[-1][0] - 10 < 35)) or (player.dir=="right" and ((list(map(add,player.body[-1],[0,-10])) in player.body) or 
+             player.body[-1][-1] - 10 < 15)) or (player.dir=="left" and ((list(map(add,player.body[-1],[0,10])) in player.body) or
+             player.body[-1][-1] + 10 >= (env.height-65))), #danger left
+
 
             env.player.dir=="right", #moving right
             env.player.dir=="left",  #moving left
             env.player.dir=="up",    #moving up
             env.player.dir=="down",  #moving down
 
-            env.food.x_food<env.player.x, #food to the left
-            env.food.x_food>env.player.x, #food to the right
-            env.food.y_food<env.player.y, #food to the up
-            env.food.y_food<env.player.y  #food to the down 
+            env.food.x_food<env.player.body[0][0], #food to the left
+            env.food.x_food>env.player.body[0][0], #food to the right
+            env.food.y_food<env.player.body[0][1], #food to the up
+            env.food.y_food<env.player.body[0][1]  #food to the down 
 
         ]
 
