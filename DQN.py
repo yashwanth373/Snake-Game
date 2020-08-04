@@ -28,6 +28,7 @@ class Agent:
         nn.add(Dense(3,activation='softmax'))
         opt=Adam(self.learning_rate)
         nn.compile(loss='mse',optimizer=opt)
+        nn.load_weights('weights/weights.hdf5')
         return nn
 
     def get_state(self,env):

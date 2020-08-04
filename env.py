@@ -7,7 +7,7 @@ from DQN import Agent
 
 # Global Paramters
 episodes_count=150
-epsilon=1
+epsilon=0
 epsilon_decay=1/75
 batch_size=500
 
