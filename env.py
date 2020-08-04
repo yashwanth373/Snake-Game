@@ -19,12 +19,12 @@ class Environment:
     def __init__(self,width,height):
         self.width=width
         self.height=height
-        pygame.display.set_caption('Snake Game')
-        self.display=pygame.display.set_mode((width,height))
-        self.bg=pygame.transform.scale(pygame.image.load("media/background.jpg"),(width-50,height-50))
-        self.display.fill((255,255,255))
-        self.display.blit(self.bg,(25,5))
-        pygame.display.update()
+        # pygame.display.set_caption('Snake Game')
+        # self.display=pygame.display.set_mode((width,height))
+        # self.bg=pygame.transform.scale(pygame.image.load("media/background.jpg"),(width-50,height-50))
+        # self.display.fill((255,255,255))
+        # self.display.blit(self.bg,(25,5))
+        # pygame.display.update()
         self.player=Player()
         self.food=Food(self)
         self.end=False
@@ -41,10 +41,10 @@ class Player:
         self.dir="right"
         self.eaten=False
 
-    def display(self,env):
-        for i in range(0,len(self.body)):
-            pygame.draw.rect(env.display,(0,0,0),[self.body[i][0],self.body[i][1],10,10])
-            pygame.display.update()
+    # def display(self,env):
+    #     for i in range(0,len(self.body)):
+    #         pygame.draw.rect(env.display,(0,0,0),[self.body[i][0],self.body[i][1],10,10])
+    #         pygame.display.update()
     
     def update_body(self,head_x,head_y,env):      
         
@@ -103,7 +103,7 @@ class Player:
                 self.update_body(self.body[0][0],self.body[0][1] + 10,env)
                 self.dir="down"
     
-        if self.body[0][0]>env.width-45 or self.body[0][0]<35 or self.body[0][1]>env.height-65 or self.body[0][1]<15:
+        if self.body[0][0]>env.width-40 or self.body[0][0]<20 or self.body[0][1]>env.height-40 or self.body[0][1]<20:
             env.end=True
         
         
@@ -119,25 +119,25 @@ class Food:
     def __init__(self,env):
         self.x_food=200
         self.y_food=300
-        pygame.draw.rect(env.display,(0,255,0),[self.x_food,self.y_food,10,10])
-        pygame.display.update()
+        # pygame.draw.rect(env.display,(0,255,0),[self.x_food,self.y_food,10,10])
+        # pygame.display.update()
     def new_spawn(self,env):
-        env.display.fill((255,255,255))
-        pygame.display.update()
-        self.x_food=random.randrange(35,env.width-45,10)
-        self.y_food=random.randrange(15,env.height-65,10)
+        # env.display.fill((255,255,255))
+        # pygame.display.update()
+        self.x_food=random.randrange(20,env.width-40,10)
+        self.y_food=random.randrange(20,env.height-40,10)
         if [self.x_food,self.y_food] in env.player.body:
             self.new_spawn(env)
         # else:
         #     screen_update(env)
 
 
-def screen_update(env):
-    env.display.blit(env.bg,(25,5))
-    pygame.display.update()
-    pygame.draw.rect(env.display,(0,255,0),[env.food.x_food,env.food.y_food,10,10])
-    pygame.display.update()
-    env.player.display(env)
+# def screen_update(env):
+#     env.display.blit(env.bg,(25,5))
+#     pygame.display.update()
+#     pygame.draw.rect(env.display,(0,255,0),[env.food.x_food,env.food.y_food,10,10])
+#     pygame.display.update()
+#     env.player.display(env)
 
 
 def initialise(env,agent):
@@ -165,15 +165,15 @@ if __name__ == '__main__':
             if event.type==pygame.QUIT:
                 pygame.quit()
                 quit()
-        env = Environment(600,400)
+        env = Environment(440,440)
         player=env.player
         food=env.food
 
         #Initialising game
         initialise(env,agent)
 
-        player.display(env)
-        pygame.display.update()
+        # player.display(env)
+        # pygame.display.update()
         direction=[]
         while not env.end:
             old_state = agent.get_state(env)
@@ -189,9 +189,10 @@ if __name__ == '__main__':
             player.move(direction,env)
             new_state = agent.get_state(env)
             reward =agent.set_reward(env)
+            agent.train_short_memory(old_state,direction,reward,new_state,env.end)
             agent.remember(old_state,direction,reward,new_state,env.end)
             player.eaten=False
-            screen_update(env)
+            # screen_update(env)
             # for better display
             # time.sleep(0.1)
         agent.replay(agent.memory,batch_size)
@@ -200,8 +201,8 @@ if __name__ == '__main__':
         if player.score-1>highscore:
             highscore=player.score-1
         game_count += 1
-        print("game number ",game_count)
-        print("head loc is ",player.body[0], "score is ",player.score-1, " and highscore is ",highscore)
+        print("game number ",game_count, "score is ",player.score-1, " and highscore is ",highscore)
+    agent.NN.save_weights('weights/weights.hdf5')
 
     pygame.quit()
     quit()

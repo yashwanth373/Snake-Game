@@ -15,7 +15,7 @@ class Agent:
         self.third_layer=150
         self.memory=collections.deque(maxlen=self.memory_size)
         self.gamma = 0.9
-        self.learning_rate=0.0005
+        self.learning_rate=0.00001
         self.NN=self.network()
 
     
@@ -38,22 +38,22 @@ class Agent:
 
 
             (player.dir=="right" and ((list(map(add, player.body[-1], [10, 0])) in player.body) or
-            player.body[-1][0] + 10 >= (env.width - 45))) or (player.dir=="left" and ((list(map(add, player.body[-1], [-10, 0])) in player.body) or
-            player.body[-1][0] - 10 < 35)) or (player.dir=="up" and ((list(map(add, player.body[-1], [0, -10])) in player.body) or
-            player.body[-1][-1] - 10 < 15)) or (player.dir=="down" and ((list(map(add, player.body[-1], [0, 10])) in player.body) or
-            player.body[-1][-1] + 10 >= (env.height-65))),  # danger straight
+            player.body[-1][0] + 10 >= (env.width - 40))) or (player.dir=="left" and ((list(map(add, player.body[-1], [-10, 0])) in player.body) or
+            player.body[-1][0] - 10 < 20)) or (player.dir=="up" and ((list(map(add, player.body[-1], [0, -10])) in player.body) or
+            player.body[-1][-1] - 10 < 20)) or (player.dir=="down" and ((list(map(add, player.body[-1], [0, 10])) in player.body) or
+            player.body[-1][-1] + 10 >= (env.height-40))),  # danger straight
 
             (player.dir=="up" and ((list(map(add,player.body[-1],[10, 0])) in player.body) or
-            player.body[ -1][0] + 10 > (env.width-45))) or (player.dir=="down" and ((list(map(add,player.body[-1],[-10,0])) in player.body) or
-            player.body[-1][0] - 10 < 35)) or (player.dir=="left" and ((list(map(add,player.body[-1],[0,-10])) in player.body) or 
-            player.body[-1][-1] - 10 < 15)) or (player.dir=="right" and ((list(map(add,player.body[-1],[0,10])) in player.body) or 
-            player.body[-1][-1] + 10 >= (env.height-65))),  # danger right
+            player.body[ -1][0] + 10 > (env.width-40))) or (player.dir=="down" and ((list(map(add,player.body[-1],[-10,0])) in player.body) or
+            player.body[-1][0] - 10 < 20)) or (player.dir=="left" and ((list(map(add,player.body[-1],[0,-10])) in player.body) or 
+            player.body[-1][-1] - 10 < 20)) or (player.dir=="right" and ((list(map(add,player.body[-1],[0,10])) in player.body) or 
+            player.body[-1][-1] + 10 >= (env.height-40))),  # danger right
 
              (player.dir=="down" and ((list(map(add,player.body[-1],[10,0])) in player.body) or
-             player.body[-1][0] + 10 > (env.width-45))) or (player.dir=="up" and ((list(map(add, player.body[-1],[-10,0])) in player.body) or
-             player.body[-1][0] - 10 < 35)) or (player.dir=="right" and ((list(map(add,player.body[-1],[0,-10])) in player.body) or 
-             player.body[-1][-1] - 10 < 15)) or (player.dir=="left" and ((list(map(add,player.body[-1],[0,10])) in player.body) or
-             player.body[-1][-1] + 10 >= (env.height-65))), #danger left
+             player.body[-1][0] + 10 > (env.width-40))) or (player.dir=="up" and ((list(map(add, player.body[-1],[-10,0])) in player.body) or
+             player.body[-1][0] - 10 < 20)) or (player.dir=="right" and ((list(map(add,player.body[-1],[0,-10])) in player.body) or 
+             player.body[-1][-1] - 10 < 20)) or (player.dir=="left" and ((list(map(add,player.body[-1],[0,10])) in player.body) or
+             player.body[-1][-1] + 10 >= (env.height-40))), #danger left
 
 
             env.player.dir=="right", #moving right
@@ -105,6 +105,13 @@ class Agent:
             target_f = self.NN.predict(np.array([state]))
             target_f[0][np.argmax(action)] = target
             self.NN.fit(np.array([state]),target_f,epochs=1,verbose=0)
+    def train_short_memory(self, state, action, reward, next_state, done):
+        target = reward
+        if not done:
+            target = reward + self.gamma * np.amax(self.NN.predict(next_state.reshape((1, 11)))[0])
+        target_f = self.NN.predict(state.reshape((1, 11)))
+        target_f[0][np.argmax(action)] = target
+        self.NN.fit(state.reshape((1, 11)), target_f, epochs=1, verbose=0)
 
 
 
